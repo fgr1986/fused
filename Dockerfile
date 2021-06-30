@@ -11,11 +11,16 @@
 #       'docker build -t local-fused-dev . --build-arg SSH_PRIVATE_KEY="$(cat ~/.ssh/id_rsa)"'
 
 # Stage 1: Install dependencies
-FROM ubuntu:bionic as systemc-build
+FROM ubuntu:20.04 as systemc-build
+    ARG DEBIAN_FRONTEND=noninteractive
+    ENV TZ=Europe/London
+    # RUN apt-get install -y tzdata
+    # RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
     WORKDIR /opt/src/
     ENV HOME /opt
     RUN apt update && apt install -y \
-            libboost-dev build-essential g++ wget ninja-build git gdb rsync autoconf
+            libboost-dev build-essential g++ wget ninja-build git gdb rsync autoconf \
+	    tmux htop vim libncurses5 libncurses5-dev
 
     # CMAKE v3.15.4
     RUN wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.sh &&\
@@ -38,15 +43,15 @@ FROM ubuntu:bionic as systemc-build
         cmake .. -GNinja -DINSTALL_DEPENDENCIES=ON &&\
         ninja
 
-FROM ubuntu:bionic as fused-build
+FROM ubuntu:20.04 as fused-build
     WORKDIR /opt/src/
     ENV HOME /opt
     ENV MSP430_INC /opt/.local/msp430-inc
     ENV MSP430_GCC_ROOT /opt/.local/msp430-gcc
     ENV ARM_GCC_ROOT /opt/.local/arm-gcc
     RUN apt update && apt install -y \
-            g++ ninja-build build-essential libboost-dev gdb git wget unzip
-
+            g++ ninja-build build-essential libboost-dev gdb git wget unzip \
+	    tmux vim
     # CMAKE v3.15.4
     RUN wget https://github.com/Kitware/CMake/releases/download/v3.15.4/cmake-3.15.4-Linux-x86_64.sh &&\
         chmod a+x cmake*.sh &&\
